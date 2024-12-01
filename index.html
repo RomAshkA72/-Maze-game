@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game</title>
+    <style>
+        /* Основной стиль */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #mazeContainer {
+            display: flex;
+            flex-direction: row;
+            margin-top: 10px;
+        }
+
+        /* Стили для canvas */
+        #mazeCanvas {
+            border: 2px solid #333;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Стили для кнопок */
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #pathList {
+            float: right;
+            width: 250px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: 600px;
+            margin-left: 15px;
+        }
+
+        #pathListPlayer2 {
+            float: left;
+            width: 250px;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: 600px;
+            margin-right: 15px;
+        }
+        
+
+        /* Стили для таймера */
+        #timerDisplay {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #007BFF;
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 2px solid #007BFF;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease-in-out, background-color 0.3s;
+        }
+
+        /* Эффект при изменении цвета */
+        #timerDisplay.updating {
+            background-color: #e0f7ff;
+            transform: scale(1.05);
+        }
+
+        /* Стили при завершении игры */
+        #timerDisplay.finished {
+            background-color: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+
+        /* Модальное окно */
+        #modal {
+            display: flex;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+        }
+
+        #modalContent {
+            background-color: #fff;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 400px;
+        }
+
+        #modalContent h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        #modalContent p {
+            margin-bottom: 20px;
+        }
+
+        #sizeSelect {
+            margin-bottom: 20px;
+        }
+
+        #victoryModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+        }
+        #victoryContent {
+            background-color: #fff;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 400px;
+        }
+        #victoryContent h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        #victoryContent p {
+            margin-bottom: 20px;
+        }
+        .pathContainerName{
+            text-align: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Модальное окно -->
+    <div id="modal">
+        <div id="modalContent">
+            <h2>Добро пожаловать в игру Лабиринт</h2>
+            <p>Выберите размер лабиринта и нажмите "Старт", чтобы начать игру</p>
+            <select id="sizeSelect">
+                <option value="10">10 x 10</option>
+                <option value="20">20 x 20</option>
+                <option value="30">30 x 30</option>
+                <option value="40">40 x 40</option>
+            </select>
+            <button id="startButton">Старт</button>
+        </div>
+    </div>
+
+    <!-- Модальное окно победы -->
+    <div id="victoryModal" style="display: none;">
+        <div id="victoryContent">
+            <h2 id="winnerMessage">Игрок победил!</h2>
+            <p id="timeElapsedMessage">Время: 0 секунд</p>
+            <button id="restartButton">Рестарт</button>
+        </div>
+    </div>
+
+
+    <!-- Таймер -->
+    <div id="timerDisplay">Time: 0 s</div>
+
+    <!-- Контейнер с лабиринтом и путями -->
+    <div id="mazeContainer">
+        <div class="pathListContainer">
+            <div class="pathContainerName">Пути <b>Игрока 2</b></div>
+            <div id="pathListPlayer2"></div>
+        </div>
+        <canvas id="mazeCanvas" width="800" height="800"></canvas>
+        <div>
+            <div class="pathContainerName">Пути <b>Игрока 1</b></div>
+            <div id="pathList"></div>
+        </div>
+    </div>
+
+    <!-- Кнопки управления -->
+    <div>
+        <button id="showPathsButton">Show All Paths</button>
+        <button id="clearPathsButton">Clear Paths</button>
+        <button id="restartButtonIsGame">Restart</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
